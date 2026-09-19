@@ -1146,8 +1146,8 @@
                     <li class="nav-item"><a class="nav-link bb-nav-link" href="#about">About</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-2 ms-lg-3">
-                    <a href="#login" class="btn btn-bb-ghost">Login</a>
-                    <a href="#get-started" class="btn btn-bb-primary">Get Started</a>
+                    <a href="{{ route('login') }}" class="btn btn-bb-ghost">Login</a>
+                    <a href="{{ route('registration') }}" class="btn btn-bb-primary">Get Started</a>
                 </div>
             </div>
         </nav>
@@ -1172,7 +1172,7 @@
                         money goes — all in one calm, friendly place.
                     </p>
                     <div class="bb-hero-actions">
-                        <a href="#get-started" class="btn btn-bb-primary">Get Started — It’s Free</a>
+                        <a href="{{ route('registration') }}" class="btn btn-bb-primary">Get Started — It’s Free</a>
                         <a href="#features" class="btn btn-bb-outline">Explore Features</a>
                     </div>
                 </div>

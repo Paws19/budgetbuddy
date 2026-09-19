@@ -266,16 +266,6 @@
             border-radius: 99px;
             margin-bottom: 1.35rem;
             text-align: center;
-            opacity: 0;
-            transform: translateY(10px);
-            animation: chipIn 0.65s var(--ease-out) 0.15s forwards;
-        }
-
-        @keyframes chipIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         @media (max-width: 900px) {
@@ -320,11 +310,6 @@
             line-height: 1.55;
         }
 
-        .form-header p strong {
-            color: var(--text);
-            font-weight: 600;
-        }
-
         .field {
             margin-bottom: 1.15rem;
         }
@@ -335,7 +320,6 @@
             font-weight: 600;
             color: var(--text);
             margin-bottom: 0.4rem;
-            letter-spacing: 0.01em;
         }
 
         .field input {
@@ -368,7 +352,6 @@
             font-size: 0.75rem;
             color: var(--text-3);
             margin-top: 0.4rem;
-            line-height: 1.4;
         }
 
         .field-row {
@@ -454,12 +437,6 @@
             transform: scale(0.99);
         }
 
-        .btn-submit:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-            transform: none;
-        }
-
         .btn-ghost-link {
             background: none;
             border: none;
@@ -509,7 +486,7 @@
             font-weight: 600;
         }
 
-        /* Steps visibility */
+        /* Steps */
         .step {
             display: none;
         }
@@ -531,7 +508,7 @@
             }
         }
 
-        /* OTP / verification code */
+        /* OTP */
         .code-inputs {
             display: flex;
             gap: 0.55rem;
@@ -585,7 +562,8 @@
             margin: -0.5rem 0 1rem;
         }
 
-        .code-error.show {
+        .code-error.show,
+        .code-error[style*="display:block"] {
             display: block;
         }
 
@@ -595,11 +573,6 @@
             color: var(--text-2);
             margin: 1.25rem 0 0;
             line-height: 1.5;
-        }
-
-        .resend-row .timer {
-            color: var(--text-3);
-            font-weight: 500;
         }
 
         /* Success */
@@ -615,19 +588,6 @@
             justify-content: center;
             font-size: 1.65rem;
             font-weight: 700;
-            animation: pop 0.55s var(--ease-out);
-        }
-
-        @keyframes pop {
-            0% {
-                transform: scale(0.5);
-                opacity: 0;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
         }
 
         .success-block {
@@ -666,6 +626,66 @@
             width: 26px;
             height: 26px;
         }
+
+        /* Error styles */
+        .field input.is-invalid {
+            border-color: #E84A5F !important;
+            box-shadow: none;
+        }
+
+        .field input.is-invalid:focus {
+            border-color: #E84A5F !important;
+            box-shadow: 0 0 0 3px rgba(232, 74, 95, 0.15);
+        }
+
+        .field-error {
+            color: #E84A5F;
+            font-size: 0.82rem;
+            margin-top: 0.35rem;
+            font-weight: 500;
+        }
+
+        /*password requirements*/
+        .password-rules {
+            list-style: none;
+            padding: 0;
+            margin: 0.6rem 0 0;
+            font-size: 0.8rem;
+        }
+
+        .password-rules li {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: var(--text-3);
+            margin-bottom: 0.3rem;
+            transition: color 0.2s;
+        }
+
+        .password-rules li::before {
+            content: "○";
+            font-size: 0.7rem;
+            color: var(--text-3);
+        }
+
+        .password-rules li.valid {
+            color: #00A08A;
+        }
+
+        .password-rules li.valid::before {
+            content: "✓";
+            color: #00A08A;
+            font-weight: 700;
+        }
+
+        .password-rules li.invalid {
+            color: #E14B5A;
+        }
+
+        .password-rules li.invalid::before {
+            content: "✕";
+            color: #E14B5A;
+        }
     </style>
 </head>
 
@@ -678,13 +698,11 @@
                 <div class="side-logo">
                     <img src="{{ asset('img/logo.png') }}" alt="BudgetBuddy">
                 </div>
-
                 <div class="greeting">
                     <div class="greeting-line"><span>Hello there! 👋</span></div>
                     <div class="greeting-line"><span>Ready to track your budget?</span></div>
                     <div class="greeting-line"><span>Create a free account and start in under a minute.</span></div>
                 </div>
-
                 <ul class="side-points">
                     <li>See income &amp; expenses clearly</li>
                     <li>Set monthly budgets that stick</li>
@@ -702,69 +720,100 @@
                 </div>
 
                 <div class="hello-chip">Hello! Ready to start tracking your budget?</div>
-
                 <a href="{{ route('index') }}" class="back-home">← Back to home</a>
 
                 <!-- STEP 1: Register -->
-                <div class="step active" id="stepRegister">
+                <div class="step {{ !session('show_verify_step') && !session('show_success_step') ? 'active' : '' }}"
+                    id="stepRegister">
                     <div class="form-header">
                         <h1>Create your account</h1>
                         <p>Join BudgetBuddy and take control of your money.</p>
                     </div>
 
-                    <form id="regForm" novalidate>
+                    <form action="{{ route('register.store') }}" method="POST">
+                        @csrf
+
                         <div class="field-row">
                             <div class="field">
                                 <label for="firstName">First name</label>
                                 <input type="text" id="firstName" name="firstName" placeholder="Alex"
-                                    autocomplete="given-name" required>
+                                    autocomplete="given-name" required value="{{ old('firstName') }}"
+                                    class="@error('firstName') is-invalid @enderror">
+                                @error('firstName')
+                                    <div class="field-error">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="field">
                                 <label for="lastName">Last name</label>
                                 <input type="text" id="lastName" name="lastName" placeholder="Reyes"
-                                    autocomplete="family-name" required>
+                                    autocomplete="family-name" required value="{{ old('lastName') }}"
+                                    class="@error('lastName') is-invalid @enderror">
+                                @error('lastName')
+                                    <div class="field-error">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
 
                         <div class="field">
                             <label for="email">Email</label>
                             <input type="email" id="email" name="email" placeholder="you@email.com"
-                                autocomplete="email" required>
+                                autocomplete="email" required value="{{ old('email') }}"
+                                class="@error('email') is-invalid @enderror">
+                            @error('email')
+                                <div class="field-error">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="field">
                             <label for="password">Password</label>
                             <div class="password-wrap">
                                 <input type="password" id="password" name="password"
-                                    placeholder="At least 8 characters" autocomplete="new-password" minlength="8"
-                                    required>
+                                    placeholder="Create a strong password" autocomplete="new-password" minlength="8"
+                                    required class="@error('password') is-invalid @enderror">
                                 <button type="button" class="toggle-pw" id="togglePw"
                                     aria-label="Show password">Show</button>
                             </div>
-                            <div class="field-hint">Use 8+ characters with a mix of letters and numbers.</div>
+
+                            <!-- Live requirements -->
+                            <ul class="password-rules" id="passwordRules">
+                                <li data-rule="length">At least 8 characters</li>
+                                <li data-rule="upper">One uppercase letter (A–Z)</li>
+                                <li data-rule="lower">One lowercase letter (a–z)</li>
+                                <li data-rule="number">One number (0–9)</li>
+                                <li data-rule="symbol">One symbol (@ $ ! % * # ? &)</li>
+                            </ul>
+
+                            @error('password')
+                                <div class="field-error">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="field">
-                            <label for="password2">Confirm password</label>
-                            <input type="password" id="password2" name="password2" placeholder="Repeat password"
-                                autocomplete="new-password" minlength="8" required>
+                            <label for="password_confirmation">Confirm password</label>
+                            <input type="password" id="password_confirmation" name="password_confirmation"
+                                placeholder="Repeat password" autocomplete="new-password" minlength="8" required>
                         </div>
 
                         <label class="terms">
-                            <input type="checkbox" id="terms" name="terms" required>
-                            <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy
+                            <input type="checkbox" id="terms" name="terms" value="1" required
+                                {{ old('terms') ? 'checked' : '' }}>
+                            <span>I agree to the <a href="{{ route('terms') }}">Terms</a> and <a
+                                    href="{{ route('privacy') }}">Privacy
                                     Policy</a>.</span>
                         </label>
+                        @error('terms')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
 
-                        <button type="submit" class="btn-submit" id="submitBtn">Create account</button>
+                        <button type="submit" class="btn-submit">Create account</button>
                     </form>
 
                     <div class="divider">or</div>
                     <p class="login-link">Already have an account? <a href="#">Log in</a></p>
                 </div>
 
-                <!-- STEP 2: Verification code -->
-                <div class="step" id="stepVerify">
+                <!-- STEP 2: Verification -->
+                <div class="step {{ session('show_verify_step') ? 'active' : '' }}" id="stepVerify">
                     <div class="mail-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
@@ -775,10 +824,16 @@
 
                     <div class="form-header" style="text-align:center">
                         <h1>Check your email</h1>
-                        <p>We sent a 6-digit code to<br><strong id="verifyEmailDisplay">you@email.com</strong></p>
+                        <p>
+                            We sent a 6-digit code to<br>
+                            <strong>{{ session('pending_email', 'you@email.com') }}</strong>
+                        </p>
                     </div>
 
-                    <form id="verifyForm" novalidate>
+                    <form action="{{ route('verify.code') }}" method="POST" id="verifyForm">
+                        @csrf
+                        <input type="hidden" name="code" id="fullCode">
+
                         <div class="code-inputs" id="codeInputs">
                             <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
                                 aria-label="Digit 1" autocomplete="one-time-code">
@@ -794,15 +849,20 @@
                                 aria-label="Digit 6">
                         </div>
 
-                        <p class="code-error" id="codeError">That code doesn’t look right. Please try again.</p>
+                        @error('code')
+                            <p class="code-error show">{{ $message }}</p>
+                        @else
+                            <p class="code-error" id="codeError">That code doesn’t look right. Please try again.</p>
+                        @enderror
 
                         <button type="submit" class="btn-submit" id="verifyBtn">Verify code</button>
                     </form>
 
                     <p class="resend-row">
                         Didn’t get the code?
-                        <button type="button" class="btn-ghost-link" id="resendBtn" disabled>Resend in <span
-                                id="resendTimer">30</span>s</button>
+                        <button type="button" class="btn-ghost-link" id="resendBtn" disabled>
+                            Resend in <span id="resendTimer">30</span>s
+                        </button>
                     </p>
 
                     <p class="resend-row" style="margin-top:0.75rem">
@@ -812,86 +872,76 @@
                 </div>
 
                 <!-- STEP 3: Success -->
-                <div class="step" id="stepSuccess">
+                <div class="step {{ session('show_success_step') ? 'active' : '' }}" id="stepSuccess">
                     <div class="success-block">
                         <div class="success-icon" aria-hidden="true">✓</div>
                         <h1>You're verified!</h1>
                         <p>Welcome to BudgetBuddy. Your account is ready — start tracking your budget.</p>
-                        <a href="{{ route('index') }}" class="btn-submit"
+                        <a href="{{ route('dashboard') }}" class="btn-submit"
                             style="display:inline-block;text-align:center;text-decoration:none;">Go to home</a>
                     </div>
                 </div>
 
             </div>
         </main>
-
     </div>
 
     <script>
-        (function() {
-            var stepRegister = document.getElementById('stepRegister');
-            var stepVerify = document.getElementById('stepVerify');
-            var stepSuccess = document.getElementById('stepSuccess');
+        const passwordInput = document.getElementById('password');
+        const rules = document.querySelectorAll('#passwordRules li');
 
-            var form = document.getElementById('regForm');
-            var verifyForm = document.getElementById('verifyForm');
-            var togglePw = document.getElementById('togglePw');
-            var password = document.getElementById('password');
-            var password2 = document.getElementById('password2');
-            var submitBtn = document.getElementById('submitBtn');
-            var verifyBtn = document.getElementById('verifyBtn');
-            var emailInput = document.getElementById('email');
-            var verifyEmailDisplay = document.getElementById('verifyEmailDisplay');
-            var codeInputs = document.querySelectorAll('#codeInputs input');
-            var codeError = document.getElementById('codeError');
-            var resendBtn = document.getElementById('resendBtn');
-            var resendTimer = document.getElementById('resendTimer');
-            var backToRegister = document.getElementById('backToRegister');
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                const val = this.value;
 
-            var resendCountdown = null;
+                const checks = {
+                    length: val.length >= 8,
+                    upper: /[A-Z]/.test(val),
+                    lower: /[a-z]/.test(val),
+                    number: /[0-9]/.test(val),
+                    symbol: /[@$!%*#?&]/.test(val),
+                };
 
-            function showStep(step) {
-                [stepRegister, stepVerify, stepSuccess].forEach(function(el) {
-                    el.classList.remove('active');
-                });
-                step.classList.add('active');
-            }
+                rules.forEach(li => {
+                    const rule = li.getAttribute('data-rule');
+                    li.classList.remove('valid', 'invalid');
 
-            function startResendTimer(seconds) {
-                var left = seconds || 30;
-                resendBtn.disabled = true;
-                resendBtn.innerHTML = 'Resend in <span id="resendTimer">' + left + '</span>s';
-                resendTimer = document.getElementById('resendTimer');
-
-                clearInterval(resendCountdown);
-                resendCountdown = setInterval(function() {
-                    left--;
-                    if (resendTimer) resendTimer.textContent = left;
-                    if (left <= 0) {
-                        clearInterval(resendCountdown);
-                        resendBtn.disabled = false;
-                        resendBtn.textContent = 'Resend code';
+                    if (val.length === 0) {
+                        // reset when empty
+                        return;
                     }
-                }, 1000);
-            }
 
-            // Show / hide password
+                    if (checks[rule]) {
+                        li.classList.add('valid');
+                    } else {
+                        li.classList.add('invalid');
+                    }
+                });
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Password show/hide
+            const togglePw = document.getElementById('togglePw');
+            const password = document.getElementById('password');
             if (togglePw && password) {
                 togglePw.addEventListener('click', function() {
-                    var show = password.type === 'password';
+                    const show = password.type === 'password';
                     password.type = show ? 'text' : 'password';
-                    if (password2) password2.type = show ? 'text' : 'password';
                     togglePw.textContent = show ? 'Hide' : 'Show';
-                    togglePw.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
                 });
             }
 
-            // OTP input behavior
-            codeInputs.forEach(function(input, index) {
+            // OTP inputs behavior
+            const codeInputs = document.querySelectorAll('#codeInputs input');
+            const codeError = document.getElementById('codeError');
+
+            codeInputs.forEach((input, index) => {
                 input.addEventListener('input', function() {
                     this.value = this.value.replace(/\D/g, '').slice(0, 1);
                     this.classList.remove('error');
-                    codeError.classList.remove('show');
+                    if (codeError) codeError.classList.remove('show');
+
                     if (this.value && index < codeInputs.length - 1) {
                         codeInputs[index + 1].focus();
                     }
@@ -905,126 +955,67 @@
 
                 input.addEventListener('paste', function(e) {
                     e.preventDefault();
-                    var pasted = (e.clipboardData || window.clipboardData).getData('text').replace(
-                        /\D/g, '').slice(0, 6);
-                    pasted.split('').forEach(function(char, i) {
+                    const pasted = (e.clipboardData || window.clipboardData)
+                        .getData('text').replace(/\D/g, '').slice(0, 6);
+
+                    pasted.split('').forEach((char, i) => {
                         if (codeInputs[i]) {
                             codeInputs[i].value = char;
                             codeInputs[i].classList.remove('error');
                         }
                     });
-                    codeError.classList.remove('show');
-                    var focusIndex = Math.min(pasted.length, codeInputs.length - 1);
+
+                    if (codeError) codeError.classList.remove('show');
+                    const focusIndex = Math.min(pasted.length, codeInputs.length - 1);
                     codeInputs[focusIndex].focus();
                 });
             });
 
-            function getCode() {
-                return Array.prototype.map.call(codeInputs, function(el) {
-                    return el.value;
-                }).join('');
-            }
-
-            // Register submit → go to verification
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    if (!form.checkValidity()) {
-                        form.reportValidity();
-                        return;
-                    }
-
-                    if (password.value !== password2.value) {
-                        password2.setCustomValidity('Passwords do not match');
-                        password2.reportValidity();
-                        password2.setCustomValidity('');
-                        return;
-                    }
-
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'Creating account…';
-
-                    // Demo — replace with your Laravel POST / register API
-                    // Then send verification email from the backend
-                    setTimeout(function() {
-                        var email = emailInput.value.trim();
-                        verifyEmailDisplay.textContent = email;
-                        showStep(stepVerify);
-                        codeInputs[0].focus();
-                        startResendTimer(30);
-
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Create account';
-                    }, 700);
-                });
-            }
-
-            // Verify code submit
+            // Combine 6 digits before submitting
+            const verifyForm = document.getElementById('verifyForm');
             if (verifyForm) {
                 verifyForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    var code = getCode();
+                    let code = '';
+                    codeInputs.forEach(input => code += input.value.trim());
+                    document.getElementById('fullCode').value = code;
 
                     if (code.length !== 6) {
-                        codeInputs.forEach(function(el) {
-                            el.classList.add('error');
-                        });
-                        codeError.textContent = 'Please enter the full 6-digit code.';
-                        codeError.classList.add('show');
-                        return;
-                    }
-
-                    verifyBtn.disabled = true;
-                    verifyBtn.textContent = 'Verifying…';
-
-                    // Demo — replace with your Laravel verify endpoint
-                    // Example: POST /verify-code { email, code }
-                    // For demo, accept any 6-digit code except 000000
-                    setTimeout(function() {
-                        if (code === '000000') {
-                            codeInputs.forEach(function(el) {
-                                el.classList.add('error');
-                            });
-                            codeError.textContent = 'That code doesn’t look right. Please try again.';
+                        e.preventDefault();
+                        codeInputs.forEach(el => el.classList.add('error'));
+                        if (codeError) {
+                            codeError.textContent = 'Please enter the full 6-digit code.';
                             codeError.classList.add('show');
-                            verifyBtn.disabled = false;
-                            verifyBtn.textContent = 'Verify code';
-                            return;
                         }
-
-                        showStep(stepSuccess);
-                    }, 700);
+                    }
                 });
             }
 
-            // Resend code
+            // Resend timer (UI only for now)
+            const resendBtn = document.getElementById('resendBtn');
+            let left = 30;
             if (resendBtn) {
-                resendBtn.addEventListener('click', function() {
-                    if (resendBtn.disabled) return;
-                    // Demo — call your Laravel resend endpoint here
-                    startResendTimer(30);
-                    codeInputs.forEach(function(el) {
-                        el.value = '';
-                        el.classList.remove('error');
-                    });
-                    codeError.classList.remove('show');
-                    codeInputs[0].focus();
-                });
+                const timer = setInterval(() => {
+                    left--;
+                    const timerEl = document.getElementById('resendTimer');
+                    if (timerEl) timerEl.textContent = left;
+
+                    if (left <= 0) {
+                        clearInterval(timer);
+                        resendBtn.disabled = false;
+                        resendBtn.textContent = 'Resend code';
+                    }
+                }, 1000);
             }
 
             // Back to register
-            if (backToRegister) {
-                backToRegister.addEventListener('click', function() {
-                    showStep(stepRegister);
-                    codeInputs.forEach(function(el) {
-                        el.value = '';
-                        el.classList.remove('error');
-                    });
-                    codeError.classList.remove('show');
+            const backBtn = document.getElementById('backToRegister');
+            if (backBtn) {
+                backBtn.addEventListener('click', function() {
+                    document.getElementById('stepVerify').classList.remove('active');
+                    document.getElementById('stepRegister').classList.add('active');
                 });
             }
-        })();
+        });
     </script>
 
 </body>
