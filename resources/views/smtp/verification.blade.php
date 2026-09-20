@@ -29,8 +29,8 @@
                     <!-- Brand -->
                     <tr>
                         <td style="padding:40px 40px 8px 40px; text-align:center;">
-                            <img src="{{ $logoPath }}" alt="BudgetBuddy" width="110"
-                                style="display:block; margin:0 auto 14px auto; height:auto;">
+                            <img src="{{ $message->embed(public_path('img/logo.png')) }}" alt="BudgetBuddy"
+                                width="110" style="display:block; margin:0 auto 14px auto; height:auto;">
                             <p
                                 style="margin:0; font-family:'Nunito','Inter',Arial,sans-serif; font-size:12px; font-weight:700; letter-spacing:0.12em; color:#00A88E; text-transform:uppercase;">
                                 BudgetBuddy

@@ -19,12 +19,11 @@ class VerificationEmail extends Mailable
      */
 
     public $code;
-    public $logoPath = 'img/logo.png';
     
-    public function __construct($code, $logoPath = 'img/logo.png')
+    public function __construct($code)
     {
         $this->code = $code;
-        $this->logoPath = $logoPath;
+       
 
     }
 
@@ -47,7 +46,7 @@ class VerificationEmail extends Mailable
             view: 'smtp.verification',
             with: [
                 'code' => $this->code,
-                'logoPath' => $this->logoPath,
+               
             ]
         );
     }

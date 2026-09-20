@@ -17,51 +17,145 @@
     <div class="overlay" id="overlay"></div>
     <div class="toast" id="toast"></div>
 
-    <!-- Modals -->
+    <!-- Income Modal -->
     <div class="modal-backdrop" id="modalIncome">
         <div class="modal">
             <h2>Add income</h2>
             <p class="sub">Record salary, freelance, or other money in.</p>
-            <form id="formIncome">
-                <div class="field"><label for="incName">Source</label><input id="incName"
-                        placeholder="e.g. Salary, Freelance" required></div>
-                <div class="field"><label for="incAmt">Amount (₱)</label><input id="incAmt" type="number"
-                        min="1" step="1" placeholder="2000" required></div>
-                <div class="field"><label for="incCat">Category</label>
-                    <select id="incCat">
-                        <option>Work</option>
-                        <option>Side hustle</option>
-                        <option>Gift</option>
-                        <option>Other</option>
+
+            {{-- Show validation errors --}}
+            @if ($errors->any())
+                <div
+                    style="background:#FEE2E2;color:#991B1B;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:14px;">
+                    <ul style="margin:0;padding-left:18px;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form action="{{ route('income.store') }}" method="POST">
+                @csrf
+
+                <!-- Source -->
+                <div class="field">
+                    <label for="incSource">Source</label>
+                    <input id="incSource" name="source" type="text" value="{{ old('source') }}"
+                        placeholder="e.g. Salary, Freelance" required>
+                </div>
+
+                <!-- Amount -->
+                <div class="field">
+                    <label for="incAmount">Amount (₱)</label>
+                    <input id="incAmount" name="amount" type="number" min="0.01" step="0.01"
+                        value="{{ old('amount') }}" placeholder="2000.00" required>
+                </div>
+
+                <!-- Date -->
+                <div class="field">
+                    <label for="incDate">Date</label>
+                    <input id="incDate" type="date" name="date_received"
+                        value="{{ old('date_received', date('Y-m-d')) }}" required>
+                </div>
+
+                <!-- Description -->
+                <div class="field">
+                    <label for="incDesc">Description</label>
+                    <input id="incDesc" name="description" type="text" value="{{ old('description') }}"
+                        placeholder="Optional notes">
+                </div>
+
+                <!-- Category -->
+                <div class="field">
+                    <label for="incCat">Category</label>
+                    <select id="incCat" name="category" required>
+                        <option value="">Select category</option>
+                        <option value="Work" {{ old('category') == 'Work' ? 'selected' : '' }}>Work</option>
+                        <option value="Side_Hustle" {{ old('category') == 'Side_Hustle' ? 'selected' : '' }}>Side hustle
+                        </option>
+                        <option value="Gift" {{ old('category') == 'Gift' ? 'selected' : '' }}>Gift</option>
+                        <option value="Other" {{ old('category') == 'Other' ? 'selected' : '' }}>Other</option>
                     </select>
                 </div>
+
+                <!-- Other Category -->
+                <div class="field" id="otherCategoryField"
+                    style="display: {{ old('category') == 'Other' ? 'block' : 'none' }};">
+                    <label for="incOtherCat">Other category</label>
+                    <input id="incOtherCat" name="other_category" type="text" value="{{ old('other_category') }}"
+                        placeholder="e.g. Rental income, Commission">
+                </div>
+
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-outline" data-close="modalIncome">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save income</button>
+                    <button type="button" class="btn btn-outline" data-close="modalIncome">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Save income
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Expense Modal -->
     <div class="modal-backdrop" id="modalExpense">
         <div class="modal">
             <h2>Log expense</h2>
             <p class="sub">Track what you spent today.</p>
-            <form id="formExpense">
-                <div class="field"><label for="expName">Description</label><input id="expName"
-                        placeholder="e.g. Lunch, Grab" required></div>
-                <div class="field"><label for="expAmt">Amount (₱)</label><input id="expAmt" type="number"
-                        min="1" step="1" placeholder="250" required></div>
-                <div class="field"><label for="expCat">Category</label>
-                    <select id="expCat">
-                        <option value="Food">Food</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Internet">Internet</option>
-                        <option value="Fun">Fun / leisure</option>
-                        <option value="Bills">Bills</option>
-                        <option value="Other">Other</option>
+
+
+
+            <form action="{{ route('expense.store') }}" method="POST">
+                @csrf
+
+                <!-- Description -->
+                <div class="field">
+                    <label for="expName">Description</label>
+                    <input id="expName" name="description_spent" type="text"
+                        value="{{ old('description_spent') }}" placeholder="e.g. Lunch, Grab" required>
+                </div>
+
+                <!-- Amount -->
+                <div class="field">
+                    <label for="expAmt">Amount (₱)</label>
+                    <input id="expAmt" name="amount_spent" type="number" min="0.01" step="0.01"
+                        value="{{ old('amount_spent') }}" placeholder="250" required>
+                </div>
+
+                <!-- Date -->
+                <div class="field">
+                    <label for="expDate">Date</label>
+                    <input id="expDate" name="date_spent" type="date"
+                        value="{{ old('date_spent', date('Y-m-d')) }}" required>
+                </div>
+
+                <!-- Category -->
+                <div class="field">
+                    <label for="expCat">Category</label>
+                    <select id="expCat" name="category_spent" required>
+                        <option value="">Select category</option>
+                        <option value="Food" {{ old('category_spent') == 'Food' ? 'selected' : '' }}>Food</option>
+                        <option value="Transport" {{ old('category_spent') == 'Transport' ? 'selected' : '' }}>
+                            Transport</option>
+                        <option value="Internet" {{ old('category_spent') == 'Internet' ? 'selected' : '' }}>Internet
+                        </option>
+                        <option value="Fun" {{ old('category_spent') == 'Fun' ? 'selected' : '' }}>Fun / leisure
+                        </option>
+                        <option value="Bills" {{ old('category_spent') == 'Bills' ? 'selected' : '' }}>Bills</option>
+                        <option value="Other" {{ old('category_spent') == 'Other' ? 'selected' : '' }}>Other</option>
                     </select>
                 </div>
+
+                <!-- Other Category -->
+                <div class="field" id="expOtherCategoryField"
+                    style="display: {{ old('category_spent') == 'Other' ? 'block' : 'none' }};">
+                    <label for="expOtherCat">Other category</label>
+                    <input id="expOtherCat" name="other_category_spent" type="text"
+                        value="{{ old('other_category_spent') }}" placeholder="e.g. Shopping, Medical, Subscription">
+                </div>
+
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" data-close="modalExpense">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save expense</button>
@@ -69,22 +163,66 @@
             </form>
         </div>
     </div>
-
+    <!-- Budget Modal -->
     <div class="modal-backdrop" id="modalBudget">
         <div class="modal">
             <h2>Set budget</h2>
             <p class="sub">Update monthly limit for a category.</p>
-            <form id="formBudget">
-                <div class="field"><label for="budCat">Category</label>
-                    <select id="budCat">
-                        <option value="Food">Food</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Internet">Internet</option>
-                        <option value="Fun">Fun / leisure</option>
+
+            {{-- Errors --}}
+            @if ($errors->any())
+                <div
+                    style="background:#FEE2E2;color:#991B1B;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:14px;">
+                    <ul style="margin:0;padding-left:18px;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            {{-- Success --}}
+            @if (session('success'))
+                <div
+                    style="background:#D1FAE5;color:#065F46;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:14px;font-weight:500;">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            <form action="{{ route('budget.store') }}" method="POST">
+                @csrf
+
+                <!-- Category -->
+                <div class="field">
+                    <label for="budCat">Category</label>
+                    <select id="budCat" name="category" required>
+                        <option value="">Select category</option>
+                        <option value="Food" {{ old('category') == 'Food' ? 'selected' : '' }}>Food</option>
+                        <option value="Transport" {{ old('category') == 'Transport' ? 'selected' : '' }}>Transport
+                        </option>
+                        <option value="Internet" {{ old('category') == 'Internet' ? 'selected' : '' }}>Internet
+                        </option>
+                        <option value="Fun" {{ old('category') == 'Fun' ? 'selected' : '' }}>Fun / leisure</option>
+                        <option value="Bills" {{ old('category') == 'Bills' ? 'selected' : '' }}>Bills</option>
+                        <option value="Other" {{ old('category') == 'Other' ? 'selected' : '' }}>Other</option>
                     </select>
                 </div>
-                <div class="field"><label for="budLimit">Monthly limit (₱)</label><input id="budLimit" type="number"
-                        min="100" step="100" placeholder="5000" required></div>
+
+                <!-- Other Category -->
+                <div class="field" id="budOtherCategoryField"
+                    style="display: {{ old('category') == 'Other' ? 'block' : 'none' }};">
+                    <label for="budOtherCat">Other category</label>
+                    <input id="budOtherCat" name="other_category" type="text"
+                        value="{{ old('other_category') }}" placeholder="e.g. Shopping, Medical, Education">
+                </div>
+
+                <!-- Monthly Limit -->
+                <div class="field">
+                    <label for="budLimit">Monthly limit (₱)</label>
+                    <input id="budLimit" name="amount_limit" type="number" min="100" step="100"
+                        value="{{ old('amount_limit') }}" placeholder="5000" required>
+                </div>
+
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" data-close="modalBudget">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save budget</button>
@@ -588,25 +726,6 @@
                 });
             });
 
-            // Forms
-            document.getElementById('formIncome').addEventListener('submit', function(e) {
-                e.preventDefault();
-                var name = document.getElementById('incName').value.trim();
-                var amount = parseInt(document.getElementById('incAmt').value, 10);
-                var cat = document.getElementById('incCat').value;
-                if (!name || !amount) return;
-                state.income.unshift({
-                    id: state.nextId++,
-                    name: name,
-                    cat: cat,
-                    amount: amount,
-                    date: new Date().toISOString().slice(0, 10)
-                });
-                closeModal('modalIncome');
-                e.target.reset();
-                toast('Income added: ' + peso(amount));
-                render();
-            });
 
             document.getElementById('formExpense').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -1282,6 +1401,63 @@
         </form>
     </div>
     <script>
+        // Show/Hide "Other" category for Expense
+        const expCat = document.getElementById('expCat');
+        const expOtherCategoryField = document.getElementById('expOtherCategoryField');
+        const expOtherCat = document.getElementById('expOtherCat');
+
+        if (expCat && expOtherCategoryField) {
+            expCat.addEventListener('change', function() {
+                if (this.value === 'Other') {
+                    expOtherCategoryField.style.display = 'block';
+                    if (expOtherCat) expOtherCat.required = true;
+                } else {
+                    expOtherCategoryField.style.display = 'none';
+                    if (expOtherCat) {
+                        expOtherCat.required = false;
+                        expOtherCat.value = '';
+                    }
+                }
+            });
+        }
+
+        // Budget - Other category toggle
+        const budCat = document.getElementById('budCat');
+        const budOtherCategoryField = document.getElementById('budOtherCategoryField');
+        const budOtherCat = document.getElementById('budOtherCat');
+
+        if (budCat && budOtherCategoryField) {
+            budCat.addEventListener('change', function() {
+                if (this.value === 'Other') {
+                    budOtherCategoryField.style.display = 'block';
+                    if (budOtherCat) budOtherCat.required = true;
+                } else {
+                    budOtherCategoryField.style.display = 'none';
+                    if (budOtherCat) {
+                        budOtherCat.required = false;
+                        budOtherCat.value = '';
+                    }
+                }
+            });
+        }
+
+        // Show/Hide "Other" category for Income
+        const incCat = document.getElementById('incCat');
+        const otherCategoryField = document.getElementById('otherCategoryField');
+        const incOtherCat = document.getElementById('incOtherCat');
+
+        incCat.addEventListener('change', function() {
+
+            if (this.value === 'Other') {
+                otherCategoryField.style.display = 'block';
+                incOtherCat.required = true;
+            } else {
+                otherCategoryField.style.display = 'none';
+                incOtherCat.required = false;
+                incOtherCat.value = '';
+            }
+
+        });
         (function() {
             function peso(n) {
                 return '₱' + Number(n || 0).toLocaleString('en-PH');
@@ -1545,6 +1721,20 @@
             }
         })();
     </script>
+    @if (session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var toast = document.getElementById('toast');
+                if (toast) {
+                    toast.textContent = @json(session('success'));
+                    toast.classList.add('show');
+                    setTimeout(function() {
+                        toast.classList.remove('show');
+                    }, 3000);
+                }
+            });
+        </script>
+    @endif
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
 </body>

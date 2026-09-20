@@ -29,7 +29,14 @@ Route::get('/buddy-budget/privacy', function () {
 Route::get('/email', function () {
     return view('smtp.verification');
 })->name('email');
+
+
 //Dashboard page
 Route::get('/dashboard', function () {
     return view('Homepage.dashboard');
 })->name('dashboard');
+
+
+Route::post('/add-income', [App\Http\Controllers\Income\IncomeController::class, 'store'])->name('income.store');
+Route::post('/add-expense', [App\Http\Controllers\Expense\ExpenseController::class, 'store'])->name('expense.store');
+Route::post('/set-budget', [App\Http\Controllers\Budget\BudgetController::class, 'store'])->name('budget.store');
