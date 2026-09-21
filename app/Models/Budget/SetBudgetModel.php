@@ -10,6 +10,7 @@ class SetBudgetModel extends Model
 
     protected $fillable = [
         'category_id',
+        'user_id',
         'monthly_limit',
     ];
 

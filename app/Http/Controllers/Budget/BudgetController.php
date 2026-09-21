@@ -11,38 +11,43 @@ use Hamcrest\Core\Set;
 
 class BudgetController extends Controller
 {
-     public function store(Request $request)
-    {
-        $rules = [
-            'category_id'    => 'required',
-            'monthly_limit'  => 'required|numeric|min:100',
-            'other_category' => 'nullable|string|max:100',
-        ];
+  public function store(Request $request)
+{
+    $rules = [
+        'category_id'    => 'required',
+        'monthly_limit'  => 'required|numeric|min:100',
+        'other_category' => 'nullable|string|max:100',
+    ];
 
-        if ($request->category_id === 'other') {
-            $rules['other_category'] = 'required|string|max:100';
-        } else {
-            $rules['category_id'] = 'required|exists:budget_categories,id';
-        }
-
-        $validated = $request->validate($rules);
-
-        if ($validated['category_id'] === 'other') {
-            $cat = BudgetCategoryModel::firstOrCreate(
-                ['name' => trim($validated['other_category'])]
-            );
-            $categoryId = $cat->id;
-        } else {
-            $categoryId = $validated['category_id'];
-        }
-
-        SetBudgetModel::updateOrCreate(
-            ['category_id' => $categoryId],
-            ['monthly_limit' => $validated['monthly_limit']]
-        );
-
-        return redirect()->route('dashboard')->with('success', 'Budget saved!');
+    if ($request->category_id === 'other') {
+        $rules['other_category'] = 'required|string|max:100';
+    } else {
+        $rules['category_id'] = 'required|exists:budget_categories,id';
     }
+
+    $validated = $request->validate($rules);
+
+    if ($validated['category_id'] === 'other') {
+        $cat = BudgetCategoryModel::firstOrCreate(
+            ['name' => trim($validated['other_category'])]
+        );
+        $categoryId = $cat->id;
+    } else {
+        $categoryId = $validated['category_id'];
+    }
+
+    SetBudgetModel::updateOrCreate(
+        [
+            'user_id'     => auth()->id(),   // unique per user + category
+            'category_id' => $categoryId,
+        ],
+        [
+            'monthly_limit' => $validated['monthly_limit'],
+        ]
+    );
+
+    return redirect()->route('dashboard')->with('success', 'Budget saved!');
+}
 
     public function update(Request $request, $category)
 {
