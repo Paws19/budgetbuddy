@@ -145,4 +145,13 @@ public function loginUser(Request $request)
         ->withInput($request->only('email'))
         ->withErrors(['email' => 'Invalid email or password.']);
 }
+
+
+public function logout(Request $request)
+{
+    auth()->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect()->route('login');
+}
 }

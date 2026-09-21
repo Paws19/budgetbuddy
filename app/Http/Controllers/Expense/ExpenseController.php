@@ -9,51 +9,88 @@ use App\Models\Expense\ExpenseCategory;
 
 class ExpenseController extends Controller
 {
-    public function store(Request $request)
-{
-    $validated = $request->validate([
-        'description_spent'     => 'required|string|max:255',
-        'amount_spent'          => 'required|numeric|min:0.01',
-        'date_spent'            => 'required|date',
-        'category_spent'        => 'required|string|in:Food,Transport,Internet,Fun,Bills,Other',
-        'other_category_spent'  => 'nullable|string|max:255',
-    ]);
-
-    // Handle category
-    if ($validated['category_spent'] === 'Other') {
-        if (empty($validated['other_category_spent'])) {
-            return back()
-                ->withErrors(['other_category_spent' => 'Please specify the other category.'])
-                ->withInput();
-        }
-
-        $category = ExpenseCategory::firstOrCreate([
-            'name' => $validated['other_category_spent'],
-        ]);
-    } else {
-        $nameMap = [
-            'Food'      => 'Food',
-            'Transport' => 'Transport',
-            'Internet'  => 'Internet',
-            'Fun'       => 'Fun',
-            'Bills'     => 'Bills',
+   public function store(Request $request)
+    {
+        $rules = [
+            'source'         => 'required|string|max:255',
+            'amount'         => 'required|numeric|min:0.01',
+            'date'           => 'required|date',
+            'category_id'    => 'required',
+            'other_category' => 'nullable|string|max:100',
         ];
 
-        $category = ExpenseCategory::firstOrCreate([
-            'name' => $nameMap[$validated['category_spent']],
+        if ($request->category_id === 'other') {
+            $rules['other_category'] = 'required|string|max:100';
+        } else {
+            $rules['category_id'] = 'required|exists:expense_categories,id';
+        }
+
+        $validated = $request->validate($rules);
+
+        if ($validated['category_id'] === 'other') {
+            $cat = ExpenseCategory::firstOrCreate(
+                ['name' => trim($validated['other_category'])]
+            );
+            $categoryId = $cat->id;
+        } else {
+            $categoryId = $validated['category_id'];
+        }
+
+        ExpenseModel::create([
+            'category_id' => $categoryId,
+            'source'      => $validated['source'],
+            'amount'      => $validated['amount'],
+            'date'        => $validated['date'],
         ]);
+
+        return redirect()->route('dashboard')->with('success', 'Expense saved!');
     }
 
-    ExpenseModel::create([
-        'source' => $validated['description_spent'],
-        'amount'      => $validated['amount_spent'],
-        'date'        => $validated['date_spent'],
-        'category_id' => $category->id,
-        // 'user_id'  => auth()->id(), // uncomment if needed
+    public function update(Request $request, $id)
+{
+    $expense = ExpenseModel::findOrFail($id);
+
+    $rules = [
+        'source'         => 'required|string|max:255',
+        'amount'         => 'required|numeric|min:0.01',
+        'date'           => 'required|date',
+        'category_id'    => 'required',
+        'other_category' => 'nullable|string|max:100',
+    ];
+
+    if ($request->category_id === 'other') {
+        $rules['other_category'] = 'required|string|max:100';
+    } else {
+        $rules['category_id'] = 'required|exists:expense_categories,id';
+    }
+
+    $validated = $request->validate($rules);
+
+    if ($validated['category_id'] === 'other') {
+        $cat = ExpenseCategory::firstOrCreate(
+            ['name' => trim($validated['other_category'])]
+        );
+        $categoryId = $cat->id;
+    } else {
+        $categoryId = $validated['category_id'];
+    }
+
+    $expense->update([
+        'category_id' => $categoryId,
+        'source'      => $validated['source'],
+        'amount'      => $validated['amount'],
+        'date'        => $validated['date'],
     ]);
 
-    return redirect()
-        ->route('dashboard')
-        ->with('success', 'Expense added successfully!');
+    return redirect()->route('dashboard')->with('success', 'Expense updated successfully!');
+}
+
+
+public function destroy($id)
+{
+    $expense = ExpenseModel::findOrFail($id);
+    $expense->delete();
+
+    return redirect()->route('dashboard')->with('success', 'Expense deleted successfully!');
 }
 }

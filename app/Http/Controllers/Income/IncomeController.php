@@ -9,52 +9,91 @@ use App\Models\Income\CategoryModel as IncomeCategoryModel;
 
 class IncomeController extends Controller
 {
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'source'         => 'required|string|max:255',
-        'amount'         => 'required|numeric|min:0.01',
-        'date_received'  => 'required|date',
-        'description'    => 'nullable|string|max:1000',
-        'category'       => 'required|string|in:Work,Side_Hustle,Gift,Other',
-        'other_category' => 'nullable|string|max:255',
-    ]);
-
-    // Handle category
-    if ($validated['category'] === 'Other') {
-        if (empty($validated['other_category'])) {
-            return back()
-                ->withErrors(['other_category' => 'Please specify the other category.'])
-                ->withInput();
-        }
-
-        $category = IncomeCategoryModel::firstOrCreate([
-            'name' => $validated['other_category'],
-        ]);
-    } else {
-        // Map the form values to real category names
-        $nameMap = [
-            'Work'        => 'Work',
-            'Side_Hustle' => 'Side hustle',
-            'Gift'        => 'Gift',
+ public function store(Request $request)
+    {
+        $rules = [
+            'source'         => 'required|string|max:255',
+            'amount'         => 'required|numeric|min:0.01',
+            'date'           => 'required|date',
+            'description'    => 'nullable|string|max:500',
+            'category_id'    => 'required',
+            'other_category' => 'nullable|string|max:100',
         ];
 
-        $category = IncomeCategoryModel::firstOrCreate([
-            'name' => $nameMap[$validated['category']],
+        if ($request->category_id === 'other') {
+            $rules['other_category'] = 'required|string|max:100';
+        } else {
+            $rules['category_id'] = 'required|exists:income_categories,id';
+        }
+
+        $validated = $request->validate($rules);
+
+        if ($validated['category_id'] === 'other') {
+            $cat = IncomeCategoryModel::firstOrCreate(
+                ['name' => trim($validated['other_category'])]
+            );
+            $categoryId = $cat->id;
+        } else {
+            $categoryId = $validated['category_id'];
+        }
+
+        IncomeModel::create([
+            'category_id' => $categoryId,
+            'source'      => $validated['source'],
+            'amount'      => $validated['amount'],
+            'date'        => $validated['date'],
+            'description' => $validated['description'] ?? null,
         ]);
+
+        return redirect()->route('dashboard')->with('success', 'Income saved!');
     }
 
-    // Save the income
-    IncomeModel::create([
-        'category_id'   => $category->id,
-        'source'        => $validated['source'],
-        'amount'        => $validated['amount'],
-        'date' => $validated['date_received'],
-        'description'   => $validated['description'] ?? null,
+    public function update(Request $request, $id)
+{
+    $income = IncomeModel::findOrFail($id);
+
+    $rules = [
+        'source'         => 'required|string|max:255',
+        'amount'         => 'required|numeric|min:0.01',
+        'date'           => 'required|date',
+        'description'    => 'nullable|string|max:500',
+        'category_id'    => 'required',
+        'other_category' => 'nullable|string|max:100',
+    ];
+
+    if ($request->category_id === 'other') {
+        $rules['other_category'] = 'required|string|max:100';
+    } else {
+        $rules['category_id'] = 'required|exists:income_categories,id';
+    }
+
+    $validated = $request->validate($rules);
+
+    if ($validated['category_id'] === 'other') {
+        $cat = IncomeCategoryModel::firstOrCreate(
+            ['name' => trim($validated['other_category'])]
+        );
+        $categoryId = $cat->id;
+    } else {
+        $categoryId = $validated['category_id'];
+    }
+
+    $income->update([
+        'category_id' => $categoryId,
+        'source'      => $validated['source'],
+        'amount'      => $validated['amount'],
+        'date'        => $validated['date'],
+        'description' => $validated['description'] ?? null,
     ]);
 
-    return redirect()
-        ->route('dashboard')
-        ->with('success', 'Income added successfully.');
+    return redirect()->route('dashboard')->with('success', 'Income updated successfully!');
+}
+
+public function destroy($id)
+{
+    $income = IncomeModel::findOrFail($id);
+    $income->delete();
+
+    return redirect()->route('dashboard')->with('success', 'Income deleted successfully!');
 }
 }

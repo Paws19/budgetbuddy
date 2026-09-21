@@ -3,7 +3,7 @@
 namespace App\Models\Income;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Income\CategoryModel as IncomeCategoryModel;
+use App\Models\Income\CategoryModel;
 
 class IncomeModel extends Model
 {
@@ -19,6 +19,6 @@ class IncomeModel extends Model
 
     public function category()
     {
-        return $this->belongsTo(IncomeCategoryModel::class, 'category_id');
+        return $this->belongsTo(CategoryModel::class, 'category_id');
     }
 }

@@ -3,9 +3,101 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Budget\SetBudgetModel as Budget;
+use App\Models\Income\IncomeModel as Income;
+use App\Models\Expense\ExpenseModel as Expense;
+use Carbon\Carbon;
+use Illuminate\Http\Request;          
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     
+
+
+ public function index()
+    {
+        $start = Carbon::now()->startOfMonth()->toDateString();
+        $end   = Carbon::now()->endOfMonth()->toDateString();
+
+        // ========== INCOME (table: income) ==========
+        $income = Income::query()
+            ->with('category')
+            ->whereBetween('date', [$start, $end])
+            ->orderByDesc('date')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'id'     => $row->id,
+                    'name'   => $row->source,
+                    'cat'    => optional($row->category)->name ?? 'Other',
+                    'amount' => (float) $row->amount,
+                    'date'   => $row->date
+                        ? Carbon::parse($row->date)->format('Y-m-d')
+                        : null,
+                ];
+            });
+
+        // ========== EXPENSES (table: expense) ==========
+        $expenses = Expense::query()
+            ->with('category')
+            ->whereBetween('date', [$start, $end])
+            ->orderByDesc('date')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'id'     => $row->id,
+                    'name'   => $row->source,
+                    'cat'    => optional($row->category)->name ?? 'Other',
+                    'amount' => (float) $row->amount,
+                    'date'   => $row->date
+                        ? Carbon::parse($row->date)->format('Y-m-d')
+                        : null,
+                ];
+            });
+
+        // ========== BUDGETS (table: budget) ==========
+        $budgets = Budget::query()
+            ->with('category')
+            ->get()
+            ->mapWithKeys(function ($row) {
+                $catName = optional($row->category)->name ?? 'Other';
+                return [$catName => (float) $row->monthly_limit];
+            });
+
+        $dashboardData = [
+            'income'   => $income->values(),
+            'expenses' => $expenses->values(),
+            'budgets'  => $budgets,
+        ];
+
+        $incomeCategories  = \App\Models\Income\CategoryModel::orderBy('name')->get();
+        $expenseCategories = \App\Models\Expense\ExpenseCategory::orderBy('name')->get();
+        $budgetCategories  = \App\Models\Budget\BudgetCategory::orderBy('name')->get();
+
+        
+        return view('Homepage.dashboard', compact(
+            'dashboardData',
+            'incomeCategories',
+            'expenseCategories',
+            'budgetCategories'
+        ));
+    }
+
+    /**
+     * Permanently delete ALL income, expenses, and budgets.
+     * Called by the Reset button after user confirms.
+     */
+    public function reset(Request $request)
+    {
+        // Hard delete — no soft deletes
+        Income::query()->delete();
+        Expense::query()->delete();
+        Budget::query()->delete();
+
+        return redirect()
+            ->route('dashboard') // change if your dashboard route name is different
+            ->with('success', 'All income, expenses, and budgets have been deleted.');
+    }
+
 }
